@@ -1,42 +1,48 @@
-import { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function App() {
-  const [time, setTime] = useState(0);
+  const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const intervalRef = useRef(null); // useRef to store interval ID
 
-  const stop = () => {
+  useEffect(() => {
+    let interval = null;
+
     if (isRunning) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-      setIsRunning(false);
-    }
-  };
-
-  const start = () => {
-    if (!isRunning) {
-      setIsRunning(true);
-      intervalRef.current = setInterval(() => {
-        setTime((prevTime) => prevTime + 1);
+      interval = setInterval(() => {
+        setSeconds((prev) => prev + 1);
       }, 1000);
+    } else if (!isRunning && interval !== null) {
+      clearInterval(interval);
     }
+
+    // Clean up
+    return () => clearInterval(interval);
+  }, [isRunning]);
+
+  const handleStartStop = () => {
+    setIsRunning((prev) => !prev);
   };
 
-  const reset = () => {
-    clearInterval(intervalRef.current);
-    intervalRef.current = null;
+  const handleReset = () => {
     setIsRunning(false);
-    setTime(0);
+    setSeconds(0);
+  };
+
+  const formatTime = () => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
     <div className="App">
-      <h1>Stop Watch</h1>
-      <p>time: {new Date(time * 1000).toISOString().substr(11, 8)}</p>
-      <div>
-        <button onClick={isRunning ? stop : start}>{isRunning ? 'Stop' : 'Start'}</button>
-        <button onClick={reset}>Reset</button>
-      </div>
+      <h1>Stopwatch</h1>
+      <h2>Time: {formatTime()}</h2>
+
+      <button onClick={handleStartStop}>
+        {isRunning ? 'Stop' : 'Start'}
+      </button>
+      <button onClick={handleReset}>Reset</button>
     </div>
   );
 }
